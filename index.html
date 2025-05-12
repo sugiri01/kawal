@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Course Schedule</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%;
+            --radius: 0.5rem;
+        }
+
+        .dark {
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%;
+            --popover-foreground: 210 40% 98%;
+            --primary: 210 40% 98%;
+            --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+
+        html {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+            margin: 0;
+            padding: 0;
+        }
+
+        .card {
+            background-color: hsl(var(--card));
+            color: hsl(var(--card-foreground));
+            border-radius: var(--radius);
+            border: 1px solid hsl(var(--border));
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .badge-secondary {
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tabs-list {
+            display: flex;
+            gap: 0.5rem;
+            background-color: hsl(var(--muted));
+            padding: 0.25rem;
+            border-radius: var(--radius);
+        }
+
+        .tab-trigger {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            background-color: transparent;
+            color: hsl(var(--muted-foreground));
+            border: none;
+        }
+
+        .tab-trigger.active {
+            background-color: white;
+            color: hsl(var(--foreground));
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .schedule-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .schedule-list li {
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+        
+        .schedule-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+        }
+
+        .day-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .day-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .toggle-theme {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background-color: hsl(var(--background));
+            padding: 1rem 0;
+        }
+
+        .course-day {
+            margin-bottom: 2rem;
+            scroll-margin-top: 4rem;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 0.75rem;
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toc {
+            position: fixed;
+            top: 5rem;
+            right: 1rem;
+            max-width: 200px;
+            padding: 1rem;
+            background-color: hsl(var(--card));
+            border-radius: var(--radius);
+            border: 1px solid hsl(var(--border));
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        @media (min-width: 1280px) {
+            .toc {
+                display: block;
+            }
+        }
+
+        .toc-link {
+            display: block;
+            padding: 0.25rem 0;
+            font-size: 0.875rem;
+            color: hsl(var(--foreground));
+            text-decoration: none;
+        }
+
+        .toc-link:hover {
+            color: hsl(var(--primary));
+        }
+
+        .toc-link.active {
+            font-weight: 600;
+            color: hsl(var(--primary));
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-theme" onclick="toggleTheme()">🌙</button>
+    <button class="back-to-top" onclick="scrollToTop()" id="backToTop" style="display: none;">↑</button>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="sticky-top">
+            <h1 class="text-3xl font-bold mb-4 text-center">10-Day Course Schedule</h1>
+            
+            <div class="tabs">
+                <div class="tabs-list flex justify-center">
+                    <button class="tab-trigger active" onclick="showTab('all')">All Courses</button>
+                    <button class="tab-trigger" onclick="showTab('bca302')">BCA 302: Data Warehousing</button>
+                    <button class="tab-trigger" onclick="showTab('bca306')">BCA 306: IoT</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="toc card" id="toc">
+            <h3 class="font-semibold mb-2">Table of Contents</h3>
+            <div id="toc-links"></div>
+        </div>
+
+        <div id="all-days">
+            <!-- Day 1 -->
+            <div class="course-day" id="day1">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 1 - May 13, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 1</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Introduction to Data Warehousing</h4>
+                                <span class="badge badge-secondary">Unit I</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Overview and definition</li>
+                                <li>Difference between DBMS and DW</li>
+                                <li>Need for data warehousing</li>
+                                <li>Data warehouse building blocks</li>
+                                <li>Data warehouses vs. data marts</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">IoT Introduction</h4>
+                                <span class="badge badge-secondary">Unit I</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Vision and definition of IoT</li>
+                                <li>Conceptual framework</li>
+                                <li>Architectural view</li>
+                                <li>Technology behind IoT</li>
+                                <li>Sources of IoT and M2M Communication</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 2 -->
+            <div class="course-day" id="day2">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 2 - May 14, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 2</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">DW Architecture & ETL Tools</h4>
+                                <span class="badge badge-secondary">Unit I</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Three-tier architecture</li>
+                                <li>Metadata in data warehouse</li>
+                                <li>ETL process introduction</li>
+                                <li>Dimensional analysis</li>
+                                <li>Information packages</li>
+                                <li>Requirements gathering methods</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Design Principles for Connected Devices</h4>
+                                <span class="badge badge-secondary">Unit I</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>IoT/M2M systems layers</li>
+                                <li>Design standardization</li>
+                                <li>Communication technologies</li>
+                                <li>Data enrichment and consolidation</li>
+                                <li>Ease of designing and affordability</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 3 -->
+            <div class="course-day" id="day3">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 3 - May 15, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 3</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Dimensional Modeling & Schemas</h4>
+                                <span class="badge badge-secondary">Unit II</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Principles and objectives</li>
+                                <li>Multi-dimensional data model</li>
+                                <li>STAR schema</li>
+                                <li>Snowflake schema</li>
+                                <li>Fact constellation schema</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Hardware for IoT</h4>
+                                <span class="badge badge-secondary">Unit II</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Sensors and types</li>
+                                <li>Digital sensors</li>
+                                <li>Actuators</li>
+                                <li>RFID technology</li>
+                                <li>Wireless sensor networks</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 4 -->
+            <div class="course-day" id="day4">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 4 - May 16, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 4</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">OLAP Fundamentals</h4>
+                                <span class="badge badge-secondary">Unit II</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Demand for Online Analytical Processing</li>
+                                <li>Limitations of other analysis methods</li>
+                                <li>OLAP definitions and rules</li>
+                                <li>OLAP characteristics</li>
+                                <li>Features and functions</li>
+                                <li>Hypercubes</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Embedded Platforms for IoT</h4>
+                                <span class="badge badge-secondary">Unit II</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Embedded computing basics</li>
+                                <li>Arduino platforms</li>
+                                <li>Raspberry Pi</li>
+                                <li>Beagle Bone</li>
+                                <li>Intel Galileo boards</li>
+                                <li>ARM cortex</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 5 -->
+            <div class="course-day" id="day5">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 5 - May 17, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">OLAP Operations & Models</h4>
+                                <span class="badge badge-secondary">Unit II</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Drill-down and roll-up</li>
+                                <li>Slice-and-dice</li>
+                                <li>Pivot/rotation</li>
+                                <li>MOLAP, ROLAP, DOLAP models</li>
+                                <li>Implementation considerations</li>
+                                <li>EIS & business strategy</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Network & Communication in IoT</h4>
+                                <span class="badge badge-secondary">Unit III</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Wireless medium access issues</li>
+                                <li>MAC protocol survey</li>
+                                <li>Routing protocols</li>
+                                <li>Sensor deployment</li>
+                                <li>Node discovery</li>
+                                <li>Data aggregation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 6 -->
+            <div class="course-day" id="day6">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 6 - May 18, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 6</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Data Mining Introduction</h4>
+                                <span class="badge badge-secondary">Unit III</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Definition and concepts</li>
+                                <li>Types of data that can be mined</li>
+                                <li>Patterns in data mining</li>
+                                <li>Technologies used</li>
+                                <li>Application areas</li>
+                                <li>Major issues</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Arduino Programming</h4>
+                                <span class="badge badge-secondary">Unit III</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Arduino platform boards anatomy</li>
+                                <li>Arduino IDE</li>
+                                <li>Coding using emulator</li>
+                                <li>Using libraries</li>
+                                <li>Additions in Arduino</li>
+                                <li>Programming for IoT</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 7 -->
+            <div class="course-day" id="day7">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 7 - May 19, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 7</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Data Pre-processing - Part 1</h4>
+                                <span class="badge badge-secondary">Unit III</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Overview of data pre-processing</li>
+                                <li>Data cleaning techniques</li>
+                                <li>Data integration methods</li>
+                                <li>Data reduction strategies</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">IoT Design Challenges</h4>
+                                <span class="badge badge-secondary">Unit IV</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Development challenges</li>
+                                <li>Security challenges</li>
+                                <li>Privacy concerns</li>
+                                <li>Scalability issues</li>
+                                <li>Interoperability problems</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 8 -->
+            <div class="course-day" id="day8">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 8 - May 20, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 8</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Data Pre-processing - Part 2</h4>
+                                <span class="badge badge-secondary">Unit III</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Data transformation</li>
+                                <li>Data discretization</li>
+                                <li>IRIS dataset exploration</li>
+                                <li>Apriori algorithm introduction</li>
+                                <li>Association rule mining</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">IoT Applications - Part 1</h4>
+                                <span class="badge badge-secondary">Unit IV</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Smart metering</li>
+                                <li>E-health applications</li>
+                                <li>City automation</li>
+                                <li>Automotive applications</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 9 -->
+            <div class="course-day" id="day9">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 9 - May 21, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 9</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Data Mining Applications</h4>
+                                <span class="badge badge-secondary">Unit IV</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Retail industry applications</li>
+                                <li>Telecommunications</li>
+                                <li>Recommender systems</li>
+                                <li>Market basket analysis</li>
+                                <li>Fraud detection</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">IoT Applications - Part 2</h4>
+                                <span class="badge badge-secondary">Unit IV</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Home automation</li>
+                                <li>Smart cards</li>
+                                <li>Mobile integration</li>
+                                <li>Tablet integration</li>
+                                <li>Smart street lights</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 10 -->
+            <div class="course-day" id="day10">
+                <div class="card p-6 mb-6">
+                    <div class="day-header">
+                        <div>
+                            <h3>Day 10 - May 22, 2025</h3>
+                        </div>
+                        <div>
+                            <span class="badge">Day 10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-grid">
+                        <div class="card p-4 mt-4 bca302-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">Data Mining Tools</h4>
+                                <span class="badge badge-secondary">Unit IV</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 302: Data Warehousing & Data Mining (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Open-source data mining tools</li>
+                                <li>Weka platform</li>
+                                <li>RapidMiner</li>
+                                <li>IBM Watson</li>
+                                <li>Classification and clustering with IRIS dataset</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card p-4 mt-4 bca306-content">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-lg">IoT Project Planning & Implementation</h4>
+                                <span class="badge badge-secondary">Unit IV</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">BCA 306: Internet of Things (1 hour)</p>
+                            <ul class="schedule-list text-sm mt-2">
+                                <li>Project scoping</li>
+                                <li>Component selection</li>
+                                <li>Integration planning</li>
+                                <li>Implementation strategies</li>
+                                <li>Testing and deployment</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate table of contents
+        function generateTOC() {
+            const tocLinks = document.getElementById('toc-links');
+            const days = document.querySelectorAll('.course-day');
+            
+            days.forEach((day, index) => {
+                const dayNumber = index + 1;
+                const link = document.createElement('a');
+                link.href = `#day${dayNumber}`;
+                link.className = 'toc-link';
+                link.textContent = `Day ${dayNumber}`;
+                link.onclick = function() {
+                    document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                };
+                tocLinks.appendChild(link);
+            });
+        }
+
+        // Show/hide back to top button
+        window.onscroll = function() {
+            const backToTopButton = document.getElementById('backToTop');
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                backToTopButton.style.display = 'flex';
+            } else {
+                backToTopButton.style.display = 'none';
+            }
+
+            // Update active TOC link
+            const scrollPosition = window.scrollY;
+            const days = document.querySelectorAll('.course-day');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            
+            days.forEach((day, index) => {
+                const dayTop = day.offsetTop - 100;
+                const dayBottom = dayTop + day.offsetHeight;
+                
+                if (scrollPosition >= dayTop && scrollPosition < dayBottom) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    tocLinks[index].classList.add('active');
+                }
+            });
+        };
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function showTab(tab) {
+            const triggers = document.querySelectorAll('.tab-trigger');
+            triggers.forEach(trigger => {
+                trigger.classList.remove('active');
+                if (trigger.textContent.toLowerCase().includes(tab) || 
+                    (tab === 'all' && trigger.textContent.includes('All'))) {
+                    trigger.classList.add('active');
+                }
+            });
+            
+            const bca302Content = document.querySelectorAll('.bca302-content');
+            const bca306Content = document.querySelectorAll('.bca306-content');
+            
+            if (tab === 'all') {
+                bca302Content.forEach(el => el.style.display = 'block');
+                bca306Content.forEach(el => el.style.display = 'block');
+            } else if (tab === 'bca302') {
+                bca302Content.forEach(el => el.style.display = 'block');
+                bca306Content.forEach(el => el.style.display = 'none');
+            } else if (tab === 'bca306') {
+                bca302Content.forEach(el => el.style.display = 'none');
+                bca306Content.forEach(el => el.style.display = 'block');
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.querySelector('.toggle-theme');
+            
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                themeButton.textContent = '🌙';
+            } else {
+                body.classList.add('dark');
+                themeButton.textContent = '☀️';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            generateTOC();
+        });
+    </script>
+</body>
+</html>
